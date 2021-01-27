@@ -9,8 +9,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Empty handle used by the netlink package methods
-var pkgHandle = &Handle{}
+// Default handle used by the netlink package methods
+var pkgHandle *Handle = nil
+
+// Timeout value for the sockets in the default handle
+var socketTimeout = 60 * time.Second
 
 // Handle is an handle for the netlink requests on a
 // specific network namespace. All the requests on the
@@ -19,6 +22,36 @@ var pkgHandle = &Handle{}
 type Handle struct {
 	sockets      map[int]*nl.SocketHandle
 	lookupByDump bool
+}
+
+func init() {
+	h, err := NewHandle()
+	if err != nil {
+		panic(fmt.Sprintf("Create default handle failed: %v", err))
+	}
+
+	pkgHandle = h
+
+	if err := SetSocketTimeout(socketTimeout); err != nil {
+		panic(fmt.Sprintf("SetSocketTimeout for default handle failed: %v", err))
+	}
+}
+
+func SetSocketTimeout(t time.Duration) error {
+	if pkgHandle == nil {
+		return fmt.Errorf("Default handle not initialized")
+	}
+
+	socketTimeout = t
+	return pkgHandle.SetSocketTimeout(socketTimeout)
+}
+
+func GetSocketTimeout() (time.Duration, error) {
+	if pkgHandle == nil {
+		return 0, fmt.Errorf("Default handle not initialized")
+	}
+
+	return socketTimeout, nil
 }
 
 // SupportsNetlinkFamily reports whether the passed netlink family is supported by this Handle
