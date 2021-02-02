@@ -160,6 +160,7 @@ func TestAddrAddReplace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("%v", addrs)
 
 	if len(addrs) != 1 {
 		t.Fatal("Address not added properly")
