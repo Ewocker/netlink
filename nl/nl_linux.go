@@ -435,6 +435,7 @@ done:
 	for {
 		msgs, from, err := s.Receive()
 		if err != nil {
+			fmt.Printf("custom_debug - line 437: %v\n", err)
 			return nil, err
 		}
 		if from.Pid != PidKernel {
@@ -443,11 +444,13 @@ done:
 		for _, m := range msgs {
 			if m.Header.Seq != req.Seq {
 				if sharedSocket {
+					fmt.Printf("custom_debug - line 447 continue (m.Header.Seq != req.Seq): %v\n", (m.Header.Seq != req.Seq))
 					continue
 				}
 				return nil, fmt.Errorf("Wrong Seq nr %d, expected %d", m.Header.Seq, req.Seq)
 			}
 			if m.Header.Pid != pid {
+				fmt.Printf("custom_debug - line 453 continue (m.Header.Pid != pid): %v\n", (m.Header.Pid != pid))
 				continue
 			}
 			if m.Header.Type == unix.NLMSG_DONE {
@@ -636,6 +639,7 @@ func (s *NetlinkSocket) Send(request *NetlinkRequest) error {
 func (s *NetlinkSocket) Receive() ([]syscall.NetlinkMessage, *unix.SockaddrNetlink, error) {
 	fd := int(atomic.LoadInt32(&s.fd))
 	if fd < 0 {
+		fmt.Printf("custom_debug - line 641 Receive - s.fd: %v fd: %v\n", s.fd, fd)
 		return nil, nil, fmt.Errorf("Receive called on a closed socket")
 	}
 	var fromAddr *unix.SockaddrNetlink
@@ -664,6 +668,7 @@ func (s *NetlinkSocket) Receive() ([]syscall.NetlinkMessage, *unix.SockaddrNetli
 func (s *NetlinkSocket) SetSendTimeout(timeout *unix.Timeval) error {
 	// Set a send timeout of SOCKET_SEND_TIMEOUT, this will allow the Send to periodically unblock and avoid that a routine
 	// remains stuck on a send on a closed fd
+	fmt.Printf("custom_debug - line 671 SetSendTimeout - s.fd: %v\n", s.fd)
 	return unix.SetsockoptTimeval(int(s.fd), unix.SOL_SOCKET, unix.SO_SNDTIMEO, timeout)
 }
 
@@ -671,6 +676,7 @@ func (s *NetlinkSocket) SetSendTimeout(timeout *unix.Timeval) error {
 func (s *NetlinkSocket) SetReceiveTimeout(timeout *unix.Timeval) error {
 	// Set a read timeout of SOCKET_READ_TIMEOUT, this will allow the Read to periodically unblock and avoid that a routine
 	// remains stuck on a recvmsg on a closed fd
+	fmt.Printf("custom_debug - line 679 SetReceiveTimeout - s.fd: %v\n", s.fd)
 	return unix.SetsockoptTimeval(int(s.fd), unix.SOL_SOCKET, unix.SO_RCVTIMEO, timeout)
 }
 
